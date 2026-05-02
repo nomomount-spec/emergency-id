@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emergency Medical ID</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+<style>
+  :root {
+    --red: #E8281E;
+    --red-dark: #B01F17;
+    --red-glow: rgba(232,40,30,0.15);
+    --black: #0A0A0A;
+    --dark: #141414;
+    --panel: #1C1C1C;
+    --border: #2A2A2A;
+    --text: #F0F0F0;
+    --muted: #888;
+    --white: #FFFFFF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BACKGROUND GRID */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(232,40,30,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,40,30,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HEADER */
+  header {
+    padding: 40px 0 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .cross-icon {
+    width: 44px;
+    height: 44px;
+    background: var(--red);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 0 24px var(--red-glow);
+  }
+
+  .cross-icon svg {
+    width: 26px;
+    height: 26px;
+    fill: white;
+  }
+
+  .header-text h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.2rem;
+    letter-spacing: 2px;
+    line-height: 1;
+    color: var(--white);
+  }
+
+  .header-text p {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 4px;
+    letter-spacing: 0.3px;
+  }
+
+  /* STEP INDICATOR */
+  .steps {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 32px;
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .step.active { color: var(--red); }
+  .step.done { color: #3fa35a; }
+
+  .step-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-family: 'DM Mono', monospace;
+    flex-shrink: 0;
+  }
+
+  .step-sep {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+    margin: 0 4px;
+    max-width: 40px;
+  }
+
+  /* FORM SECTIONS */
+  .section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    margin-bottom: 16px;
+  }
+
+  .section-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    color: var(--red);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .field-row.full { grid-template-columns: 1fr; }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  input, select, textarea {
+    background: var(--dark);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px var(--red-glow);
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: #444;
+  }
+
+  select option { background: var(--dark); }
+
+  textarea {
+    resize: vertical;
+    min-height: 80px;
+    line-height: 1.5;
+  }
+
+  /* TAG OPTIONS */
+  .tag-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 0;
+  }
+
+  .tag-opt {
+    background: var(--dark);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .tag-opt:hover { border-color: #555; }
+
+  .tag-opt.selected {
+    border-color: var(--red);
+    background: rgba(232,40,30,0.06);
+  }
+
+  .tag-opt input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .tag-opt .opt-icon { font-size: 1.6rem; margin-bottom: 6px; }
+  .tag-opt .opt-title { font-size: 0.8rem; font-weight: 600; color: var(--text); }
+  .tag-opt .opt-desc { font-size: 0.68rem; color: var(--muted); margin-top: 3px; line-height: 1.3; }
+
+  /* GENERATE BUTTON */
+  .generate-btn {
+    width: 100%;
+    background: var(--red);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    padding: 18px;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+    margin-top: 24px;
+    box-shadow: 0 4px 20px rgba(232,40,30,0.3);
+  }
+
+  .generate-btn:hover {
+    background: var(--red-dark);
+    box-shadow: 0 6px 28px rgba(232,40,30,0.45);
+  }
+
+  .generate-btn:active { transform: scale(0.98); }
+
+  /* OUTPUT PANEL */
+  #output-panel {
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .output-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 2px;
+    color: #3fa35a;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* NFC CARD PREVIEW */
+  .nfc-card {
+    background: linear-gradient(135deg, #1a0505 0%, #2a0808 40%, #1a0505 100%);
+    border: 1.5px solid var(--red);
+    border-radius: 18px;
+    padding: 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 40px rgba(232,40,30,0.1), inset 0 1px 0 rgba(255,255,255,0.05);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .nfc-card::before {
+    content: 'NFC';
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--red);
+    letter-spacing: 2px;
+    opacity: 0.6;
+  }
+
+  .nfc-card::after {
+    content: '';
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    border: 1px solid rgba(232,40,30,0.08);
+    pointer-events: none;
+  }
+
+  .card-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(232,40,30,0.2);
+  }
+
+  .card-cross {
+    width: 36px;
+    height: 36px;
+    background: var(--red);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .card-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+
+  .card-dob {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 2px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .card-field .cf-label {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--red);
+    font-weight: 600;
+    margin-bottom: 3px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .card-field .cf-value {
+    font-size: 0.82rem;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  .card-field.wide { grid-column: 1 / -1; }
+
+  /* URL BLOCK - the interesting one */
+  .url-block {
+    background: linear-gradient(135deg, #0d0d12 0%, #14141c 100%);
+    border: 1.5px solid var(--red);
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(232,40,30,0.08);
+  }
+
+  .url-block::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--red), transparent);
+    animation: scan 3s linear infinite;
+  }
+
+  @keyframes scan {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .url-block-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .url-pulse {
+    width: 8px;
+    height: 8px;
+    background: var(--red);
+    border-radius: 50%;
+    box-shadow: 0 0 12px var(--red);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  .url-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    color: var(--red);
+    font-weight: 600;
+    flex: 1;
+  }
+
+  .url-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 3px 7px;
+    border-radius: 4px;
+  }
+
+  .url-display {
+    background: var(--black);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    word-break: break-all;
+    line-height: 1.6;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+
+  .url-display:hover { border-color: var(--red); }
+
+  .url-protocol { color: var(--muted); }
+  .url-domain { color: var(--text); font-weight: 500; }
+  .url-path { color: var(--red); }
+
+  .url-meta {
+    display: flex;
+    gap: 16px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--border);
+  }
+
+  .url-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .meta-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .meta-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* QR SECTION */
+  .qr-section {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 20px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 16px;
+    align-items: center;
+  }
+
+  .qr-wrapper {
+    background: white;
+    padding: 12px;
+    border-radius: 12px;
+    line-height: 0;
+    box-shadow: 0 0 0 1px var(--border);
+  }
+
+  .qr-wrapper canvas {
+    display: block;
+    width: 130px !important;
+    height: 130px !important;
+  }
+
+  .qr-info { min-width: 0; }
+
+  .qr-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 1.5px;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .qr-desc {
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  @media (max-width: 520px) {
+    .qr-section { grid-template-columns: 1fr; text-align: center; }
+    .qr-wrapper { margin: 0 auto; }
+    .url-meta { flex-wrap: wrap; gap: 12px; }
+  }
+
+  /* OUTPUT BLOCK (legacy, kept for compatibility) */
+  .output-block {
+    background: var(--dark);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .output-block-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 10px;
+    font-family: 'DM Mono', monospace;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .output-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    color: #ccc;
+    word-break: break-all;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+
+  /* ACTION BUTTONS */
+  .action-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .action-btn {
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 13px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .action-btn:hover { border-color: var(--red); color: var(--red); }
+  .action-btn.primary {
+    background: var(--red);
+    border-color: var(--red);
+    color: white;
+  }
+  .action-btn.primary:hover { background: var(--red-dark); border-color: var(--red-dark); color: white; }
+
+  /* NFC INSTRUCTIONS */
+  .nfc-steps {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px;
+    margin-top: 20px;
+  }
+
+  .nfc-steps h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 2px;
+    font-size: 1rem;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .nfc-step-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+
+  .nfc-step-item:last-child { margin-bottom: 0; }
+
+  .nfc-step-num {
+    width: 24px;
+    height: 24px;
+    background: var(--red);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .nfc-step-text { font-size: 0.85rem; color: #bbb; line-height: 1.5; }
+  .nfc-step-text strong { color: var(--text); }
+
+  /* ALERT */
+  .alert {
+    background: rgba(232,40,30,0.08);
+    border: 1px solid rgba(232,40,30,0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 0.8rem;
+    color: #f9a;
+    line-height: 1.5;
+    margin-top: 16px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .back-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .back-btn:hover { color: var(--text); border-color: #555; }
+
+  .copied-toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #3fa35a;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    z-index: 1000;
+    transition: transform 0.3s ease;
+    pointer-events: none;
+  }
+
+  .copied-toast.show { transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 520px) {
+    .field-row { grid-template-columns: 1fr; }
+    .tag-options { grid-template-columns: 1fr; }
+    .card-grid { grid-template-columns: 1fr; }
+    .action-row { grid-template-columns: 1fr; }
+    .header-text h1 { font-size: 1.7rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="cross-icon">
+      <svg viewBox="0 0 24 24"><path d="M19 11h-6V5a1 1 0 0 0-2 0v6H5a1 1 0 0 0 0 2h6v6a1 1 0 0 0 2 0v-6h6a1 1 0 0 0 0-2z"/></svg>
+    </div>
+    <div class="header-text">
+      <h1>Emergency Medical ID</h1>
+      <p>Build your NFC-ready emergency profile in seconds</p>
+    </div>
+  </header>
+
+  <!-- FORM PANEL -->
+  <div id="form-panel">
+    <div class="steps">
+      <div class="step active" id="step1"><span class="step-num">1</span> Your Info</div>
+      <div class="step-sep"></div>
+      <div class="step" id="step2"><span class="step-num">2</span> Medical</div>
+      <div class="step-sep"></div>
+      <div class="step" id="step3"><span class="step-num">3</span> Contacts</div>
+    </div>
+
+    <!-- PERSONAL -->
+    <div class="section">
+      <div class="section-label">Personal Info</div>
+      <div class="field-row">
+        <div class="field">
+          <label>First Name <span style="color:var(--red)">*</span></label>
+          <input type="text" id="fname" placeholder="Jane">
+        </div>
+        <div class="field">
+          <label>Last Name</label>
+          <input type="text" id="lname" placeholder="Doe">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Date of Birth</label>
+          <input type="date" id="dob">
+        </div>
+        <div class="field">
+          <label>Blood Type</label>
+          <select id="blood">
+            <option value="">Unknown</option>
+            <option>A+</option><option>A-</option>
+            <option>B+</option><option>B-</option>
+            <option>AB+</option><option>AB-</option>
+            <option>O+</option><option>O-</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row full">
+        <div class="field">
+          <label>Home Address</label>
+          <input type="text" id="address" placeholder="123 Main St, City, State">
+        </div>
+      </div>
+    </div>
+
+    <!-- MEDICAL -->
+    <div class="section">
+      <div class="section-label">Medical Info</div>
+      <div class="field-row full">
+        <div class="field">
+          <label>Medical Conditions</label>
+          <textarea id="conditions" placeholder="e.g. Type 1 Diabetic, Epilepsy, Heart condition..."></textarea>
+        </div>
+      </div>
+      <div class="field-row full">
+        <div class="field">
+          <label>Medications</label>
+          <textarea id="medications" placeholder="e.g. Metformin 500mg, Lisinopril 10mg..."></textarea>
+        </div>
+      </div>
+      <div class="field-row full">
+        <div class="field">
+          <label>Allergies</label>
+          <textarea id="allergies" placeholder="e.g. Penicillin, Latex, Shellfish..." style="min-height:60px"></textarea>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Doctor / Physician</label>
+          <input type="text" id="doctor" placeholder="Dr. Smith">
+        </div>
+        <div class="field">
+          <label>Doctor's Phone</label>
+          <input type="tel" id="doc-phone" placeholder="+1 (555) 000-0000">
+        </div>
+      </div>
+      <div class="field-row full">
+        <div class="field">
+          <label>Additional Notes</label>
+          <textarea id="notes" placeholder="e.g. Do not give aspirin. Has pacemaker..." style="min-height:60px"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- EMERGENCY CONTACTS -->
+    <div class="section">
+      <div class="section-label">Emergency Contacts</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Contact 1 Name</label>
+          <input type="text" id="c1name" placeholder="John Doe">
+        </div>
+        <div class="field">
+          <label>Relationship</label>
+          <input type="text" id="c1rel" placeholder="Spouse, Parent...">
+        </div>
+      </div>
+      <div class="field-row full">
+        <div class="field">
+          <label>Contact 1 Phone</label>
+          <input type="tel" id="c1phone" placeholder="+1 (555) 000-0000">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Contact 2 Name</label>
+          <input type="text" id="c2name" placeholder="Sarah Doe">
+        </div>
+        <div class="field">
+          <label>Relationship</label>
+          <input type="text" id="c2rel" placeholder="Sibling, Friend...">
+        </div>
+      </div>
+      <div class="field-row full">
+        <div class="field">
+          <label>Contact 2 Phone</label>
+          <input type="tel" id="c2phone" placeholder="+1 (555) 000-0000">
+        </div>
+      </div>
+    </div>
+
+    <button class="generate-btn" onclick="generate()">⚡ GENERATE MY EMERGENCY ID</button>
+  </div>
+
+  <!-- OUTPUT PANEL -->
+  <div id="output-panel">
+    <button class="back-btn" onclick="goBack()">← Edit Info</button>
+
+    <div class="output-header">
+      <div class="output-title">
+        <span>✓</span> Profile Generated
+      </div>
+    </div>
+
+    <!-- CARD PREVIEW -->
+    <div class="nfc-card" id="card-preview">
+      <div class="card-top">
+        <div class="card-cross">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M19 11h-6V5a1 1 0 0 0-2 0v6H5a1 1 0 0 0 0 2h6v6a1 1 0 0 0 2 0v-6h6a1 1 0 0 0 0-2z"/></svg>
+        </div>
+        <div>
+          <div class="card-name" id="out-name">—</div>
+          <div class="card-dob" id="out-dob"></div>
+        </div>
+      </div>
+      <div class="card-grid" id="card-grid"></div>
+    </div>
+
+    <!-- URL OUTPUT -->
+    <div class="output-block url-block">
+      <div class="url-block-header">
+        <div class="url-pulse"></div>
+        <span class="url-label">YOUR EMERGENCY URL</span>
+        <span class="url-badge">SELF-CONTAINED</span>
+      </div>
+      <div class="url-display" id="url-display">
+        <span class="url-protocol">https://</span><span class="url-domain" id="url-domain">—</span><span class="url-path" id="url-path">/...</span>
+      </div>
+      <div class="url-meta">
+        <div class="url-meta-item">
+          <span class="meta-label">Size</span>
+          <span class="meta-value" id="url-size">—</span>
+        </div>
+        <div class="url-meta-item">
+          <span class="meta-label">Encoding</span>
+          <span class="meta-value">Base64</span>
+        </div>
+        <div class="url-meta-item">
+          <span class="meta-label">Status</span>
+          <span class="meta-value" style="color:#3fa35a">● LIVE</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- QR CODE -->
+    <div class="qr-section">
+      <div class="qr-wrapper">
+        <canvas id="qr-canvas"></canvas>
+      </div>
+      <div class="qr-info">
+        <div class="qr-title">Scan or Tap</div>
+        <div class="qr-desc">Anyone with a phone camera or NFC reader can access your emergency profile in seconds. No app required.</div>
+        <button class="action-btn primary" style="margin-top:12px;width:100%" onclick="testURL()">⚡ Test Open Profile</button>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="action-row">
+      <button class="action-btn primary" onclick="copyURL()">🔗 Copy URL</button>
+      <button class="action-btn" onclick="downloadQR()">📥 Save QR Code</button>
+      <button class="action-btn" onclick="printCard()">🖨️ Print Card</button>
+      <button class="action-btn" onclick="shareProfile()">📤 Share</button>
+    </div>
+
+    <!-- HOW TO WRITE -->
+    <div class="nfc-steps">
+      <h3>How to Write the URL to Your NFC Tag</h3>
+      <div class="nfc-step-item">
+        <div class="nfc-step-num">1</div>
+        <div class="nfc-step-text"><strong>Download NFC Tools</strong> — free app by wakdev on iOS or Android.</div>
+      </div>
+      <div class="nfc-step-item">
+        <div class="nfc-step-num">2</div>
+        <div class="nfc-step-text"><strong>Tap "Copy URL"</strong> above to copy your emergency link.</div>
+      </div>
+      <div class="nfc-step-item">
+        <div class="nfc-step-num">3</div>
+        <div class="nfc-step-text">In NFC Tools, open <strong>Write → Add a record → URL/URI</strong>. Paste the link.</div>
+      </div>
+      <div class="nfc-step-item">
+        <div class="nfc-step-num">4</div>
+        <div class="nfc-step-text">Tap <strong>Write</strong> and hold your phone to the tag. Anyone who taps it now sees your full emergency profile instantly.</div>
+      </div>
+    </div>
+
+    <div class="alert">
+      ⚠️ <span>Keep your tag updated if medications or contacts change. Consider wearing it on a wristband or attaching it to your ID/wallet for fastest access by first responders.</span>
+    </div>
+  </div>
+</div>
+
+<div class="copied-toast" id="toast">✓ Copied to clipboard!</div>
+
+<script>
+  // ====== UTILITIES ======
+  function val(id) {
+    return document.getElementById(id)?.value?.trim() || '';
+  }
+
+  function formatDOB(d) {
+    if (!d) return '';
+    const [y, m, day] = d.split('-');
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${months[parseInt(m)-1]} ${parseInt(day)}, ${y}`;
+  }
+
+  function getAge(dob) {
+    if (!dob) return '';
+    const today = new Date();
+    const birth = new Date(dob);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age;
+  }
+
+  // ====== ENCODING ======
+  // Encode profile data into URL-safe base64
+  function encodeProfile(data) {
+    const json = JSON.stringify(data);
+    // UTF-8 safe base64 encoding
+    const b64 = btoa(unescape(encodeURIComponent(json)));
+    // URL-safe variant
+    return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  function decodeProfile(encoded) {
+    try {
+      // Restore base64
+      let b64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+      while (b64.length % 4) b64 += '=';
+      const json = decodeURIComponent(escape(atob(b64)));
+      return JSON.parse(json);
+    } catch (e) {
+      console.error('Decode error:', e);
+      return null;
+    }
+  }
+
+  function buildURL(data) {
+    const encoded = encodeProfile(data);
+    const baseURL = window.location.origin + window.location.pathname;
+    return `${baseURL}#id=${encoded}`;
+  }
+
+  // ====== GENERATE ======
+  function generate() {
+    const fname = val('fname'), lname = val('lname');
+    if (!fname) { alert('Please enter your first name.'); return; }
+
+    const d = {
+      n: `${fname} ${lname}`.trim(),
+      dob: val('dob'),
+      bld: val('blood'),
+      adr: val('address'),
+      cnd: val('conditions'),
+      med: val('medications'),
+      alg: val('allergies'),
+      nts: val('notes'),
+      doc: val('doctor'),
+      dph: val('doc-phone'),
+      c1n: val('c1name'),
+      c1r: val('c1rel'),
+      c1p: val('c1phone'),
+      c2n: val('c2name'),
+      c2r: val('c2rel'),
+      c2p: val('c2phone'),
+    };
+
+    // Strip empty fields to keep URL short
+    Object.keys(d).forEach(k => { if (!d[k]) delete d[k]; });
+
+    const url = buildURL(d);
+    window._url = url;
+    window._data = d;
+
+    renderCard(d);
+    renderURL(url);
+    renderQR(url);
+
+    document.getElementById('form-panel').style.display = 'none';
+    document.getElementById('output-panel').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    document.querySelectorAll('.step').forEach(s => {
+      s.classList.remove('active');
+      s.classList.add('done');
+    });
+  }
+
+  function renderCard(d) {
+    document.getElementById('out-name').textContent = d.n || '—';
+    const dobAge = d.dob ? `${formatDOB(d.dob)}  ·  Age ${getAge(d.dob)}` : '';
+    document.getElementById('out-dob').textContent = dobAge;
+
+    const grid = document.getElementById('card-grid');
+    grid.innerHTML = '';
+    const fields = [
+      d.bld && { label: 'Blood Type', value: d.bld },
+      d.alg && { label: 'Allergies', value: d.alg },
+      d.cnd && { label: 'Conditions', value: d.cnd.replace(/\n/g,', '), wide: true },
+      d.med && { label: 'Medications', value: d.med.replace(/\n/g,', '), wide: true },
+      d.c1p && { label: `${d.c1n || 'Emergency Contact'}${d.c1r ? ' ('+d.c1r+')' : ''}`, value: d.c1p },
+      d.c2p && { label: `${d.c2n || 'Contact 2'}${d.c2r ? ' ('+d.c2r+')' : ''}`, value: d.c2p },
+      d.nts && { label: 'Notes', value: d.nts, wide: true },
+    ].filter(Boolean);
+
+    fields.forEach(f => {
+      const el = document.createElement('div');
+      el.className = 'card-field' + (f.wide ? ' wide' : '');
+      el.innerHTML = `<div class="cf-label">${escapeHTML(f.label)}</div><div class="cf-value">${escapeHTML(f.value)}</div>`;
+      grid.appendChild(el);
+    });
+  }
+
+  function escapeHTML(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function renderURL(url) {
+    // Split URL into pretty parts
+    const parts = url.match(/^(https?:\/\/)([^\/]+)(.*)$/);
+    if (parts) {
+      document.querySelector('.url-protocol').textContent = parts[1];
+      document.getElementById('url-domain').textContent = parts[2];
+      document.getElementById('url-path').textContent = parts[3];
+    } else {
+      document.getElementById('url-domain').textContent = url;
+      document.getElementById('url-path').textContent = '';
+    }
+    // Size in bytes
+    const bytes = new Blob([url]).size;
+    document.getElementById('url-size').textContent = `${bytes} B`;
+  }
+
+  function renderQR(url) {
+    const canvas = document.getElementById('qr-canvas');
+    new QRious({
+      element: canvas,
+      value: url,
+      size: 260,
+      level: 'M',
+      foreground: '#0A0A0A',
+      background: '#FFFFFF'
+    });
+  }
+
+  // ====== ACTIONS ======
+  function copyURL() {
+    navigator.clipboard.writeText(window._url || '').then(() => showToast('✓ URL copied — paste it into NFC Tools'));
+  }
+
+  function testURL() {
+    window.open(window._url, '_blank');
+  }
+
+  function downloadQR() {
+    const canvas = document.getElementById('qr-canvas');
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = `emergency-qr-${(window._data?.n || 'profile').replace(/\s+/g,'-').toLowerCase()}.png`;
+    a.click();
+  }
+
+  async function shareProfile() {
+    const url = window._url;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Emergency Medical ID',
+          text: `Emergency ID for ${window._data?.n || ''}`,
+          url
+        });
+      } catch (e) { copyURL(); }
+    } else {
+      copyURL();
+    }
+  }
+
+  function goBack() {
+    document.getElementById('output-panel').style.display = 'none';
+    document.getElementById('form-panel').style.display = 'block';
+    document.querySelectorAll('.step').forEach((s, i) => {
+      s.classList.remove('done');
+      if (i === 0) s.classList.add('active');
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg || '✓ Copied!';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  function printCard() {
+    const card = document.getElementById('card-preview').outerHTML;
+    const w = window.open('', '_blank');
+    w.document.write(`
+      <html><head><title>Emergency ID</title>
+      <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+      <style>
+        body { background: #1a0505; display:flex; justify-content:center; align-items:center; min-height:100vh; margin:0; }
+        .nfc-card { background:linear-gradient(135deg,#1a0505,#2a0808,#1a0505); border:1.5px solid #E8281E; border-radius:18px; padding:28px; max-width:400px; width:90%; box-shadow:0 0 40px rgba(232,40,30,0.2); position:relative; overflow:hidden; }
+        .nfc-card::before { content:'NFC'; position:absolute; top:18px; right:20px; font-family:'DM Mono',monospace; font-size:0.65rem; color:#E8281E; letter-spacing:2px; opacity:0.6; }
+        .card-top { display:flex; align-items:center; gap:12px; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid rgba(232,40,30,0.2); }
+        .card-cross { width:36px; height:36px; background:#E8281E; border-radius:8px; display:flex; align-items:center; justify-content:center; }
+        .card-name { font-family:'Bebas Neue',sans-serif; font-size:1.5rem; letter-spacing:1px; color:#F0F0F0; line-height:1; }
+        .card-dob { font-size:0.75rem; color:#888; margin-top:2px; font-family:'DM Mono',monospace; }
+        .card-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+        .card-field .cf-label { font-size:0.62rem; text-transform:uppercase; letter-spacing:1px; color:#E8281E; font-weight:600; margin-bottom:3px; font-family:'DM Mono',monospace; }
+        .card-field .cf-value { font-size:0.82rem; color:#F0F0F0; line-height:1.4; }
+        .card-field.wide { grid-column:1/-1; }
+      </style></head>
+      <body>${card}</body></html>
+    `);
+    w.document.close();
+    setTimeout(() => w.print(), 600);
+  }
+
+  // ====== VIEWER MODE ======
+  // If URL has #id=... payload, show emergency profile instead of form
+  function checkViewerMode() {
+    const hash = window.location.hash;
+    if (!hash || !hash.startsWith('#id=')) return false;
+
+    const encoded = hash.substring(4);
+    const data = decodeProfile(encoded);
+    if (!data) return false;
+
+    renderViewer(data);
+    return true;
+  }
+
+  function renderViewer(d) {
+    document.body.innerHTML = `
+      <div class="viewer-bg"></div>
+      <div class="viewer-container">
+        <div class="viewer-header">
+          <div class="viewer-pulse"></div>
+          <div class="viewer-title-block">
+            <div class="viewer-eyebrow">EMERGENCY MEDICAL ID</div>
+            <div class="viewer-name">${escapeHTML(d.n || 'Unknown')}</div>
+            ${d.dob ? `<div class="viewer-sub">${formatDOB(d.dob)} · Age ${getAge(d.dob)}</div>` : ''}
+          </div>
+        </div>
+
+        ${(d.bld || d.alg) ? `
+          <div class="viewer-critical">
+            ${d.bld ? `<div class="crit-item"><div class="crit-label">BLOOD</div><div class="crit-value">${escapeHTML(d.bld)}</div></div>` : ''}
+            ${d.alg ? `<div class="crit-item"><div class="crit-label">ALLERGIES</div><div class="crit-value">${escapeHTML(d.alg)}</div></div>` : ''}
+          </div>
+        ` : ''}
+
+        ${d.cnd ? `<div class="viewer-block"><div class="vb-label">⚕ Medical Conditions</div><div class="vb-value">${escapeHTML(d.cnd).replace(/\n/g,'<br>')}</div></div>` : ''}
+        ${d.med ? `<div class="viewer-block"><div class="vb-label">💊 Medications</div><div class="vb-value">${escapeHTML(d.med).replace(/\n/g,'<br>')}</div></div>` : ''}
+        ${d.nts ? `<div class="viewer-block warn"><div class="vb-label">⚠️ Important Notes</div><div class="vb-value">${escapeHTML(d.nts).replace(/\n/g,'<br>')}</div></div>` : ''}
+        ${d.adr ? `<div class="viewer-block"><div class="vb-label">📍 Home Address</div><div class="vb-value">${escapeHTML(d.adr)}</div></div>` : ''}
+
+        ${(d.c1p || d.c2p || d.dph) ? `
+          <div class="viewer-contacts">
+            <div class="vc-header">📞 EMERGENCY CONTACTS</div>
+            ${d.c1p ? `<a href="tel:${d.c1p.replace(/\s/g,'')}" class="contact-card">
+              <div class="contact-info">
+                <div class="contact-name">${escapeHTML(d.c1n || 'Contact 1')}</div>
+                <div class="contact-rel">${escapeHTML(d.c1r || 'Emergency Contact')}</div>
+              </div>
+              <div class="contact-phone">${escapeHTML(d.c1p)}</div>
+              <div class="contact-call">CALL</div>
+            </a>` : ''}
+            ${d.c2p ? `<a href="tel:${d.c2p.replace(/\s/g,'')}" class="contact-card">
+              <div class="contact-info">
+                <div class="contact-name">${escapeHTML(d.c2n || 'Contact 2')}</div>
+                <div class="contact-rel">${escapeHTML(d.c2r || 'Emergency Contact')}</div>
+              </div>
+              <div class="contact-phone">${escapeHTML(d.c2p)}</div>
+              <div class="contact-call">CALL</div>
+            </a>` : ''}
+            ${d.dph ? `<a href="tel:${d.dph.replace(/\s/g,'')}" class="contact-card doctor">
+              <div class="contact-info">
+                <div class="contact-name">${escapeHTML(d.doc || 'Doctor')}</div>
+                <div class="contact-rel">Physician</div>
+              </div>
+              <div class="contact-phone">${escapeHTML(d.dph)}</div>
+              <div class="contact-call">CALL</div>
+            </a>` : ''}
+          </div>
+        ` : ''}
+
+        <a href="tel:911" class="call-911">
+          <span class="call-911-icon">🚨</span>
+          <span>CALL 911</span>
+        </a>
+
+        <div class="viewer-footer">
+          <div>Emergency Medical ID · Self-contained NFC tag</div>
+          <div style="margin-top:4px;opacity:0.5">No data sent to any server. Stored entirely in this URL.</div>
+        </div>
+      </div>
+
+      <style>
+        body { background:#0A0A0A; color:#F0F0F0; font-family:'DM Sans',sans-serif; margin:0; padding:0; min-height:100vh; }
+        .viewer-bg {
+          position:fixed; inset:0;
+          background:
+            radial-gradient(circle at 20% 0%, rgba(232,40,30,0.15) 0%, transparent 50%),
+            radial-gradient(circle at 80% 100%, rgba(232,40,30,0.1) 0%, transparent 50%),
+            #0A0A0A;
+          z-index:0;
+        }
+        .viewer-container { max-width:520px; margin:0 auto; padding:24px 18px 60px; position:relative; z-index:1; }
+        .viewer-header {
+          background: linear-gradient(135deg, #1a0505 0%, #2a0a0a 100%);
+          border:1.5px solid #E8281E;
+          border-radius:18px;
+          padding:24px;
+          margin-bottom:14px;
+          display:flex; align-items:center; gap:16px;
+          box-shadow: 0 0 40px rgba(232,40,30,0.2);
+        }
+        .viewer-pulse {
+          width:14px; height:14px; background:#E8281E; border-radius:50%;
+          box-shadow:0 0 16px #E8281E;
+          animation:vpulse 1.5s ease-in-out infinite; flex-shrink:0;
+        }
+        @keyframes vpulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.4; transform:scale(1.4); } }
+        .viewer-eyebrow { font-family:'DM Mono',monospace; font-size:0.7rem; letter-spacing:2.5px; color:#E8281E; font-weight:600; margin-bottom:6px; }
+        .viewer-name { font-family:'Bebas Neue',sans-serif; font-size:2rem; line-height:1; letter-spacing:1px; }
+        .viewer-sub { font-family:'DM Mono',monospace; font-size:0.78rem; color:#888; margin-top:4px; }
+        .viewer-critical {
+          display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;
+        }
+        .crit-item {
+          background:#1a0505; border:1px solid rgba(232,40,30,0.5); border-radius:12px; padding:14px;
+        }
+        .crit-label { font-family:'DM Mono',monospace; font-size:0.65rem; color:#E8281E; letter-spacing:1.5px; font-weight:600; margin-bottom:4px; }
+        .crit-value { font-family:'Bebas Neue',sans-serif; font-size:1.4rem; letter-spacing:1px; }
+        .viewer-block {
+          background:#141414; border:1px solid #2A2A2A; border-radius:12px; padding:16px 18px; margin-bottom:10px;
+        }
+        .viewer-block.warn { border-color:rgba(232,40,30,0.4); background:rgba(232,40,30,0.05); }
+        .vb-label { font-family:'DM Mono',monospace; font-size:0.7rem; color:#E8281E; letter-spacing:1.5px; margin-bottom:8px; font-weight:600; }
+        .vb-value { font-size:0.92rem; line-height:1.5; color:#E8E8E8; }
+        .viewer-contacts { margin-top:18px; }
+        .vc-header { font-family:'DM Mono',monospace; font-size:0.72rem; letter-spacing:2px; color:#888; margin-bottom:10px; padding:0 4px; }
+        .contact-card {
+          display:flex; align-items:center; gap:14px;
+          background:#141414; border:1px solid #2A2A2A; border-radius:14px; padding:14px 16px; margin-bottom:8px;
+          text-decoration:none; color:inherit; transition:all 0.15s; cursor:pointer;
+        }
+        .contact-card:hover, .contact-card:active { background:#1a1a1a; border-color:#E8281E; transform:scale(0.99); }
+        .contact-card.doctor { border-color:#3a5a8a; }
+        .contact-info { flex:1; min-width:0; }
+        .contact-name { font-weight:600; font-size:0.95rem; color:#F0F0F0; }
+        .contact-rel { font-size:0.75rem; color:#888; margin-top:1px; }
+        .contact-phone { font-family:'DM Mono',monospace; font-size:0.85rem; color:#bbb; }
+        .contact-call { background:#E8281E; color:white; font-family:'Bebas Neue',sans-serif; font-size:0.85rem; letter-spacing:1px; padding:6px 12px; border-radius:6px; }
+        .call-911 {
+          display:flex; align-items:center; justify-content:center; gap:10px;
+          background:linear-gradient(135deg,#E8281E,#B01F17);
+          color:white; text-decoration:none;
+          font-family:'Bebas Neue',sans-serif; font-size:1.6rem; letter-spacing:3px;
+          padding:22px; border-radius:14px; margin-top:20px;
+          box-shadow:0 6px 30px rgba(232,40,30,0.5);
+          animation:callpulse 2s ease-in-out infinite;
+        }
+        @keyframes callpulse {
+          0%,100% { box-shadow:0 6px 30px rgba(232,40,30,0.5); }
+          50% { box-shadow:0 6px 40px rgba(232,40,30,0.8); }
+        }
+        .call-911:active { transform:scale(0.98); }
+        .call-911-icon { font-size:1.4rem; }
+        .viewer-footer { text-align:center; margin-top:30px; font-size:0.72rem; color:#666; line-height:1.5; }
+        @media (max-width:380px) {
+          .viewer-critical { grid-template-columns:1fr; }
+          .viewer-name { font-size:1.6rem; }
+        }
+      </style>
+    `;
+  }
+
+  // ====== INIT ======
+  if (!checkViewerMode()) {
+    // Normal app mode - form is shown by default
+  }
+</script>
+</body>
+</html>
